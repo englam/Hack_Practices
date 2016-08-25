@@ -3,10 +3,27 @@ import os
 import struct
 import threading
 
+from netaddr import IPNetwork, IPAddress
 from ctypes import *
 
 # host to listen on
 host = "192.168.13.103"
+
+# subnet to target
+subnet = "192.168.13.0/24"
+
+# magic we'll check ICMP responses for
+magic_message = "Englam Test test!"
+
+
+def udp_sender(subnet, magic_message):
+    sender = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
+    for ip in IPNetwork(subnet):
+        try:
+            sender.sendto(magic_message, ("%s" % ip, 65212))
+        except:
+            pass
 
 
 class IP(Structure):
@@ -78,9 +95,12 @@ sniffer.setsockopt(socket.IPPROTO_IP, socket.IP_HDRINCL, 1)
 if os.name == "nt":
     sniffer.ioctl(socket.SIO_RCVALL, socket.RCVALL_ON)
 
+# start sending packets
+t = threading.Thread(target=udp_sender, args=(subnet, magic_message))
+t.start()
+
 try:
     while True:
-
 
         # read in a single packet
         raw_buffer = sniffer.recvfrom(65565)[0]
@@ -88,18 +108,33 @@ try:
         # create an IP header from the first 20 bytes of the buffer
         ip_header = IP(raw_buffer[0:20])
 
-        print "Protocol: %s %s -> %s" % (ip_header.protocol, ip_header.src_address, ip_header.dst_address)
+        # print "Protocol: %s %s -> %s" % (ip_header.protocol, ip_header.src_address, ip_header.dst_address)
 
         # if it's ICMP we want it
         if ip_header.protocol == "ICMP":
+
             # calculate where our ICMP packet starts
             offset = ip_header.ihl * 4
             buf = raw_buffer[offset:offset + sizeof(ICMP)]
+
             # create our ICMP structure
             icmp_header = ICMP(buf)
 
-            print "ICMP -> Type: %d Code: %d  MTU: %d" % (icmp_header.type, icmp_header.code , icmp_header.next_hop_mtu)
+            # print "ICMP -> Type: %d Code: %d" % (icmp_header.type, icmp_header.code)
 
+            # now check for the TYPE 3 and CODE 3 which indicates
+            # a host is up but no port available to talk to
+            if icmp_header.code == 3 and icmp_header.type == 3:
+
+                # check to make sure we are receiving the response
+                # that lands in our subnet
+                if IPAddress(ip_header.src_address) in IPNetwork(subnet):
+
+                    # test for our magic message, 因為raw_buffer接收整個封包內容，所以把整個封包長度減掉data的長度後，後面的位置就為data長度的位置
+                    if raw_buffer[len(raw_buffer) - len(magic_message):] == magic_message:
+                        #print (raw_buffer[56:])
+                        #print (raw_buffer[len(raw_buffer) - len(magic_message):])
+                        print "Host Up: %s" % ip_header.src_address
 # handle CTRL-C
 except KeyboardInterrupt:
     # if we're on Windows turn off promiscuous mode
