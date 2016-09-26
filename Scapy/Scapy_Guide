@@ -1,0 +1,20 @@
+#############default stauts check###############
+
+1. Open Terminal
+2. Type "scapy"
+3. Type "conf"
+4. Check status
+
+##############Check Scapy Commands###############
+
+1. Open Terminal
+2. Type "scapy"
+3. Type "lsc()"
+4. Check status
+
+##############Check Network Protocols##############
+
+1. Open Terminal
+2. Type "scapy"
+3. Type "ls()"  or "ls(Ether)"  or "ls(UDP)" or "ls(TCP)" or "ls(IP)" or "ls(ARP".....
+4. Check status
