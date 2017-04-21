@@ -7,6 +7,10 @@ client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 client.connect((target_host,target_port))
 
+a=socket.gethostname()
+
+print (a)
+
 client.send("GET / HTTP/1.1\r\nHost: google.com\r\n\r\n")
 
 response = client.recv(4096)

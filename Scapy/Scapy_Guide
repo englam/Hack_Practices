@@ -18,3 +18,27 @@
 2. Type "scapy"
 3. Type "ls()"  or "ls(Ether)"  or "ls(UDP)" or "ls(TCP)" or "ls(IP)" or "ls(ARP".....
 4. Check status
+
+
+
+#############check ip#####################
+a = IP(dst='192.168.1.253',ttl=12)/UDP(dport=123)
+a.sprintf("The source is %IP.src%")
+
+# send packet "a"
+send (a)
+
+
+#####l2 frames###
+a = Ether()
+a.src ='00:00:00:00:00:01'
+a.dst = 'ff:ff:ff:ff:ff:ff'
+a.type = 0x8088
+data = "test"
+b = a /data
+ls(b)
+sendp(b, count=10, iface='enp8s0')
+
+
+#####sniffer frame####
+sniff(count=20, prn=lambda x:x.summary())

